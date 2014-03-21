@@ -1,0 +1,18 @@
+{
+    "lock_file": "/var/lock/lathe",
+
+    "log_directory": "logs",
+    "filename_filter": "*.log",
+    "timestamp_format": "-%Y%m%d",
+
+    "spool_directory": "spool",
+
+    "reopen_file_signals": {
+        "nginx": "USR2"
+    },
+
+    "aws_access_key": "YOUR ACCESS KEY",
+    "aws_secret_key": "YOUR SECRET KEY",
+    "s3_bucket": "bucket-name",
+    "s3_pattern": "%(hostname)s/%(log_name)s"
+}
