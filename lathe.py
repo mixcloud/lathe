@@ -59,6 +59,20 @@ def rotate_log_files(options):
             logger.warn('Not rotating, previous job still underway')
             return
 
+        # Check we can send signals to all relevant processes
+        pids_for_processes = running_processes_by_name(options['reopen_file_signals'].keys())
+        unkillable_processes = set()
+        for process_name in options['reopen_file_signals'].keys():
+            pids = pids_for_processes[process_name]
+            try:
+                for pid in pids:
+                    os.kill(pid, 0)
+            except OSError:
+                unkillable_processes.add(process_name)
+        if unkillable_processes:
+            logger.error('Cannot send signal to some processes, aborting: %s' % ', '.join(unkillable_processes))
+            return
+
         files_to_rotate = [
             file for file in os.listdir(options['log_directory'])
             if fnmatch.fnmatch(file, options['filename_filter'])
