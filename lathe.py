@@ -28,6 +28,10 @@ from throttle import Throttle
 logger = logging.getLogger('mixcloud.lathe')
 
 
+FILE_OPEN_CHECK_INTERVAL = 5  # seconds
+MAX_CHECKS_WITHOUT_FILE_CLOSED = 12  # If no files closed for 60 seconds give up
+
+
 def compress_file(filepath):
     """
     Compresses the supplied file, deleting the original
@@ -104,7 +108,8 @@ def rotate_log_files(options):
             for pid in pids:
                 os.kill(pid, signal_id)
 
-        throttle_file_checks = Throttle(5)
+        throttle_file_checks = Throttle(FILE_OPEN_CHECK_INTERVAL)
+        checks_without_closed_files = 0
         s3_store = S3LogStore(options)
 
         # Get files which have no open handles and process them as soon as we can.
@@ -129,6 +134,13 @@ def rotate_log_files(options):
                     os.unlink(compressed_path)
                 except:
                     logger.error('Unexpected error processing %s', ready_file, exc_info=True)
+            if len(closed_files):
+                checks_without_closed_files = 0
+            else:
+                checks_without_closed_files += 1
+                if checks_without_closed_files > MAX_CHECKS_WITHOUT_FILE_CLOSED:
+                    logger.error('Gave up waiting for files to close. Open files: %s' % ', '.join(open_files))
+                    return
 
 
 def main(args):
