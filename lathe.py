@@ -20,6 +20,7 @@ import os
 import shutil
 import signal
 import sys
+import tempfile
 
 from s3logstore import S3LogStore
 from processes import running_processes_by_name, check_for_open_files
@@ -55,6 +56,23 @@ def request_lock(lockfile):
             raise
         else:
             yield True
+
+
+def copy_atomic(source, target):
+    """
+    Performs an atomic copy from source to target by first copying to a
+    temporary location then moving from there to the destination.
+
+    This is necessary to make sure any process watching the target location does not
+    start processing the file until we are complete.
+    """
+    temporary_path = tempfile.mkdtemp()
+    temporary_filename = os.path.join(temporary_path, 'copy_atomic_file')
+    try:
+        shutil.copy(source, temporary_filename)
+        os.rename(temporary_filename, target)
+    finally:
+        shutil.rmtree(temporary_path, ignore_errors=True)
 
 
 def rotate_log_files(options):
@@ -125,7 +143,7 @@ def rotate_log_files(options):
                 try:
                     ready_path = os.path.join(options['log_directory'], ready_file)
 
-                    shutil.copy(
+                    copy_atomic(
                         ready_path,
                         os.path.join(options['spool_directory'], ready_file))
 
