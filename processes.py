@@ -49,16 +49,21 @@ def check_for_open_files(filenames):
 
     for pid in process_ids():
         fd_directory = os.path.join('/proc', str(pid), 'fd')
-        for fd in os.listdir(fd_directory):
-            fd = os.path.join(fd_directory, fd)
-            try:
-                fd_target = os.readlink(fd)
-            except OSError as exc:
-                # Files may be closed while we are trying to read them
-                if exc.errno != 2:
-                    raise
-            else:
-                if fd_target in closed_handles:
-                    open_handles.add(fd_target)
-                    closed_handles.remove(fd_target)
+        try:
+            for fd in os.listdir(fd_directory):
+                fd = os.path.join(fd_directory, fd)
+                try:
+                    fd_target = os.readlink(fd)
+                except OSError as exc:
+                    # Files may be closed while we are trying to read them
+                    if exc.errno != 2:
+                        raise
+                else:
+                    if fd_target in closed_handles:
+                        open_handles.add(fd_target)
+                        closed_handles.remove(fd_target)
+        except OSError as exc:
+            # Processes may end while we are examining their files
+            if exc.errno != 2:
+                raise
     return closed_handles, open_handles
