@@ -28,8 +28,13 @@ def running_processes_by_name(names):
 
     for pid in process_ids():
         comm_file = os.path.join('/proc', str(pid), 'comm')
-        with open(comm_file, 'r') as f:
-            process_name = f.read().strip()
+        try:
+            with open(comm_file, 'r') as f:
+                process_name = f.read().strip()
+        except OSError as exc:
+            # Processes may end while we are examining their files
+            if exc.errno != 2:
+                raise
         if process_name in names:
             name_pid_mapping[process_name].append(int(pid))
     return name_pid_mapping
