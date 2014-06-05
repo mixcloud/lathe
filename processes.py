@@ -59,7 +59,7 @@ def check_for_open_files(filenames):
                 fd = os.path.join(fd_directory, fd)
                 try:
                     fd_target = os.readlink(fd)
-                except IOError as exc:
+                except OSError as exc:
                     # Files may be closed while we are trying to read them
                     if exc.errno != 2:
                         raise
