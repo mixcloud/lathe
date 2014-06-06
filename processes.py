@@ -31,7 +31,7 @@ def running_processes_by_name(names):
         try:
             with open(comm_file, 'r') as f:
                 process_name = f.read().strip()
-        except IOError as exc:
+        except (IOError, OSError) as exc:
             # Processes may end while we are examining their files
             if exc.errno != 2:
                 raise
@@ -59,7 +59,7 @@ def check_for_open_files(filenames):
                 fd = os.path.join(fd_directory, fd)
                 try:
                     fd_target = os.readlink(fd)
-                except OSError as exc:
+                except (IOError, OSError) as exc:
                     # Files may be closed while we are trying to read them
                     if exc.errno != 2:
                         raise
@@ -67,7 +67,7 @@ def check_for_open_files(filenames):
                     if fd_target in closed_handles:
                         open_handles.add(fd_target)
                         closed_handles.remove(fd_target)
-        except IOError as exc:
+        except (IOError, OSError) as exc:
             # Processes may end while we are examining their files
             if exc.errno != 2:
                 raise
