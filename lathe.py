@@ -75,6 +75,14 @@ def copy_atomic(source, target):
         shutil.rmtree(temporary_path, ignore_errors=True)
 
 
+def kill_if_running(pid, signal):
+    try:
+        os.kill(pid, signal)
+    except OSError as exc:
+        if exc.errno != 3:
+            raise
+
+
 def rotate_log_files(options):
     with request_lock(options['lock_file']) as acquired:
         if not acquired:
@@ -88,7 +96,7 @@ def rotate_log_files(options):
             pids = pids_for_processes[process_name]
             try:
                 for pid in pids:
-                    os.kill(pid, 0)
+                    kill_if_running(pid, 0)
             except OSError:
                 unkillable_processes.add(process_name)
         if unkillable_processes:
@@ -124,7 +132,7 @@ def rotate_log_files(options):
             signal_id = getattr(signal, 'SIG' + signal_name.upper())
             pids = pids_for_processes[process_name]
             for pid in pids:
-                os.kill(pid, signal_id)
+                kill_if_running(pid, signal_id)
 
         throttle_file_checks = Throttle(FILE_OPEN_CHECK_INTERVAL)
         checks_without_closed_files = 0
