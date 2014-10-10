@@ -5,8 +5,6 @@
     "filename_filter": "*.log",
     "timestamp_format": "-%Y%m%d",
 
-    "spool_directory": "spool",
-
     "reopen_file_signals": {
         "nginx": "USR2"
     },

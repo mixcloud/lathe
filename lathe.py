@@ -150,14 +150,6 @@ def rotate_log_files(options):
             for ready_file in closed_files:
                 try:
                     ready_path = os.path.join(options['log_directory'], ready_file)
-
-                    # Flume chokes on empty files, so don't put them in the spool directory
-                    file_size = os.stat(ready_path).st_size
-                    if file_size > 0:
-                        copy_atomic(
-                            ready_path,
-                            os.path.join(options['spool_directory'], ready_file))
-
                     compressed_path = compress_file(ready_path)
                     s3_store.store_file(compressed_path)
                     os.unlink(compressed_path)
