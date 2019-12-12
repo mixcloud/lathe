@@ -32,7 +32,7 @@ class S3LogStore(object):
             self.options['aws_access_key'],
             self.options['aws_secret_key'])
         try:
-            bucket = connection.get_bucket(self.options['s3_bucket'])
+            bucket = connection.get_bucket(self.options['s3_bucket'], validate=False)
             yield bucket
         finally:
             connection.close()
